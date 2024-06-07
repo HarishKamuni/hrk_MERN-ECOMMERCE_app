@@ -1,22 +1,27 @@
 const userModel = require('../models/userModel.js');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const signup = async (req, res) => {
   try {
-    console.log(req.body);
+    // console.log(req.body);
     const { name, email, password } = req.body;
 
     if (!email || !name || !password) {
       throw new Error('Please fill all the fields');
     }
     const user = await userModel.findOne({ email });
+
     if (user) {
       throw new Error('User Already Exist.');
     }
     const hashPassword = await bcrypt.hash(password, 10);
+    if (!hashPassword) {
+      throw new Error('Something is wrong!!');
+    }
     const userData = new userModel({
-      name,
-      email,
+      ...req.body,
+      role: 'GENERAL',
       password: hashPassword,
     });
     const saveUser = userData.save();
@@ -35,4 +40,46 @@ const signup = async (req, res) => {
   }
 };
 
-module.exports = signup;
+const signIn = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      throw new Error('Please fill all the fields');
+    }
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      throw new Error('User Not Found!!');
+    }
+    const isCorrect = await bcrypt.compare(password, user.password);
+    if (!isCorrect) {
+      throw new Error('Invailid email or password!!');
+    } else {
+      const tokenData = {
+        _id: user._id,
+        email: user.email,
+      };
+
+      const token = await jwt.sign(tokenData, process.env.SECRET_KEY, {
+        expiresIn: 60 * 60 * 8,
+      });
+      const tokenOption = {
+        httpOnly: true,
+        secure: true,
+      };
+      res.cookie('token', token, tokenOption).status(201).json({
+        data: token,
+        success: true,
+        error: false,
+        message: 'Login Successfully!!',
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      error: true,
+      success: false,
+      message: error.message || error,
+    });
+  }
+};
+
+module.exports = { signup, signIn };
