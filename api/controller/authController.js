@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 
 const signup = async (req, res) => {
   try {
-    // console.log(req.body);
     const { name, email, password } = req.body;
 
     if (!email || !name || !password) {
@@ -24,14 +23,16 @@ const signup = async (req, res) => {
       role: 'GENERAL',
       password: hashPassword,
     });
+
     const saveUser = userData.save();
     res.status(201).json({
       data: saveUser,
       success: true,
       error: false,
-      message: 'user created successfully!',
+      message: 'User created successfully!',
     });
   } catch (error) {
+    console.log('Error', 'hello');
     res.status(500).json({
       message: error.message || error,
       error: true,
@@ -82,4 +83,23 @@ const signIn = async (req, res) => {
   }
 };
 
-module.exports = { signup, signIn };
+const LogOut = async (req, res) => {
+  try {
+    res.clearCookie('token');
+
+    res.status(200).json({
+      error: false,
+      success: true,
+      message: 'User Logged Out Successfully!!',
+      data: [],
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: true,
+      success: false,
+      message: error.message || error,
+    });
+  }
+};
+
+module.exports = { signup, signIn, LogOut };

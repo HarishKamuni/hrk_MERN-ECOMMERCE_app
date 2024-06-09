@@ -8,5 +8,6 @@ const userDetails = require('../controller/userDetails.js');
 router.post('/signup', authController.signup);
 router.post('/signin', authController.signIn);
 router.get('/userdetails', authToken, userDetails);
+router.get('/logout', authController.LogOut);
 
 module.exports = router;
