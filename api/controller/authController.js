@@ -32,7 +32,6 @@ const signup = async (req, res) => {
       message: 'User created successfully!',
     });
   } catch (error) {
-    console.log('Error', 'hello');
     res.status(500).json({
       message: error.message || error,
       error: true,
